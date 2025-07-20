@@ -55,7 +55,7 @@ def handle_message(event):
             continue
 
     if len(players) < 4:
-        reply = "プレイヤーが4人未満です。正しく入力してください。"
+        reply = "3麻はやらない主義なのです！"
         messaging_api.reply_message(
             ReplyMessageRequest(
                 reply_token=event.reply_token,
@@ -66,7 +66,7 @@ def handle_message(event):
 
     total = sum(players.values())
     if total != 100000:
-        reply = "点数の合計が100000になっていません。入力を確認してください。"
+        reply = "点棒も数えられないんですか～？"
         messaging_api.reply_message(
             ReplyMessageRequest(
                 reply_token=event.reply_token,
