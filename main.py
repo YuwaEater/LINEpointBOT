@@ -1,12 +1,15 @@
 from flask import Flask, request, abort
 import os
-from linebot import LineBotApi, WebhookHandler
-from linebot.exceptions import InvalidSignatureError
-from linebot.models import MessageEvent, TextMessage, TextSendMessage
+from linebot.v3.messaging import MessagingApi, Configuration
+from linebot.v3.webhook import WebhookHandler
+from linebot.v3.exceptions import InvalidSignatureError
+from linebot.v3.models import MessageEvent, TextMessage, TextSendMessage
 
 app = Flask(__name__)
 
-line_bot_api = LineBotApi(os.getenv("LINE_CHANNEL_ACCESS_TOKEN"))
+# LINE APIの初期化
+configuration = Configuration(access_token=os.getenv("LINE_CHANNEL_ACCESS_TOKEN"))
+line_bot_api = MessagingApi(configuration)
 handler = WebhookHandler(os.getenv("LINE_CHANNEL_SECRET"))
 
 # 表示名対応表
@@ -49,7 +52,7 @@ def handle_message(event):
     if len(players) < 4:
         line_bot_api.reply_message(
             event.reply_token,
-            TextSendMessage(text="プレイヤーが4人未満です。正しく入力してください。")
+            [TextSendMessage(text="プレイヤーが4人未満です。正しく入力してください。")]
         )
         return
 
@@ -57,7 +60,7 @@ def handle_message(event):
     if total != 100000:
         line_bot_api.reply_message(
             event.reply_token,
-            TextSendMessage(text="点数の合計が100000になっていません。入力を確認してください。")
+            [TextSendMessage(text="点数の合計が100000になっていません。入力を確認してください。")]
         )
         return
 
@@ -84,5 +87,8 @@ def handle_message(event):
 
     line_bot_api.reply_message(
         event.reply_token,
-        TextSendMessage(text=reply_text)
+        [TextSendMessage(text=reply_text)]
     )
+
+if __name__ == "__main__":
+    app.run()
