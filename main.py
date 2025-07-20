@@ -61,18 +61,28 @@ def handle_message(event):
         )
         return
 
-    # 順位付け
     sorted_players = sorted(players.items(), key=lambda x: x[1], reverse=True)
 
-    # 加点・減点ルール
-    adjustment = [15000, 5000, -5000, -15000]
+    # 順位と点数調整
+    adjustments = [0, 0, 0, 0]
+    scores = [score for _, score in sorted_players]
 
-    # 最終点数を計算
-    final_scores = {}
-    for (key, score), diff in zip(sorted_players, adjustment):
-        final_scores[key] = score + diff
+    if scores[0] == scores[1]:
+        adjustments[0] = 10000
+        adjustments[1] = 10000
+    elif scores[1] == scores[2]:
+        pass  # 変化なし
+    elif scores[2] == scores[3]:
+        adjustments[2] = -10000
+        adjustments[3] = -10000
+    else:
+        adjustments = [15000, 5000, -5000, -15000]
 
-    # 表示用に再ソート
+    final_scores = {
+        key: score + adj for (key, score), adj in zip(sorted_players, adjustments)
+    }
+
+    # 順位付け
     sorted_final = sorted(final_scores.items(), key=lambda x: x[1], reverse=True)
 
     result_lines = []
@@ -80,14 +90,19 @@ def handle_message(event):
         name = name_map.get(key, key)
         result_lines.append(f"{i}位　{name}　{score}")
 
-    reply_text = "\n".join(result_lines)
+    result_lines.append("")
+
+    # 円換算（25000引いて0.05倍）
+    yen_lines = []
+    for i, (key, score) in enumerate(sorted_final, start=1):
+        name = name_map.get(key, key)
+        yen = int((score - 25000) * 0.05)
+        sign = "-" if yen < 0 else ""
+        yen_lines.append(f"{i}位　{name}　{sign}{abs(yen)}円")
+
+    reply_text = "\n".join(result_lines + yen_lines)
 
     line_bot_api.reply_message(
         event.reply_token,
         TextSendMessage(text=reply_text)
     )
-
-# 🚀 Renderでポートが検出されるように修正
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
