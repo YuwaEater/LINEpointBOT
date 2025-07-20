@@ -41,8 +41,8 @@ def handle_message(event):
         return
 
     text = event.message.text.strip()
-　　#4行確認
-　　valid_lines = [line for line in text.splitlines() if len(line) >=2 and line[1:].isdigit()]
+    #4行確認
+    valid_lines = [line for line in text.splitlines() if len(line) >=2 and line[1:].isdigit()]
     if len(valid_lines) <4:
         return
         
