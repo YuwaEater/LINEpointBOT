@@ -41,10 +41,11 @@ def handle_message(event):
         return
 
     text = event.message.text.strip()
-　　# 点数形式の行が4つあるか確認（ここを追加）
-    valid_lines = [line for line in text.splitlines() if len(line) >= 2 and line[1:].isdigit()]
-    if len(valid_lines) < 4:
-        return    
+　　#4行確認
+　　valid_lines = [line for line in text.splitlines() if len(line) >=2 and line[1:].isdigit()]
+    if len(valid_lines) <4:
+        return
+        
     lines = text.splitlines()
     players = {}
 
