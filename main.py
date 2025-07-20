@@ -69,12 +69,11 @@ def handle_message(event):
     scores = [score for _, score in sorted_players]
     adjustments = [0, 0, 0, 0]
 
-    # 同点処理（条件付き加点・減点）
     if scores[0] == scores[1]:
         adjustments[0] = 10000
         adjustments[1] = 10000
     elif scores[1] == scores[2]:
-        pass  # 加点なし
+        pass  # 加点・減点なし
     elif scores[2] == scores[3]:
         adjustments[2] = -10000
         adjustments[3] = -10000
@@ -108,3 +107,8 @@ def handle_message(event):
     # 全体返信
     reply_text = "\n".join(result_lines + yen_lines)
     messaging_api.reply_message(event.reply_token, [TextMessage(text=reply_text)])
+
+# ★ Render対応：ポート設定
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
