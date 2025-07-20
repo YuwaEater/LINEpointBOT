@@ -36,7 +36,6 @@ def handle_message(event):
     lines = text.splitlines()
     players = {}
 
-    # 入力を解析
     for line in lines:
         if len(line) < 2:
             continue
@@ -47,7 +46,6 @@ def handle_message(event):
         except ValueError:
             continue
 
-    # 点数が4人分未満の場合は無視
     if len(players) < 4:
         line_bot_api.reply_message(
             event.reply_token,
@@ -55,7 +53,6 @@ def handle_message(event):
         )
         return
 
-    # 合計点のチェック
     total = sum(players.values())
     if total != 100000:
         line_bot_api.reply_message(
@@ -64,11 +61,22 @@ def handle_message(event):
         )
         return
 
-    # ソートして順位付け
+    # 順位付け
     sorted_players = sorted(players.items(), key=lambda x: x[1], reverse=True)
 
+    # 加点・減点ルール
+    adjustment = [15000, 5000, -5000, -15000]
+
+    # 最終点数を計算
+    final_scores = {}
+    for (key, score), diff in zip(sorted_players, adjustment):
+        final_scores[key] = score + diff
+
+    # 表示用に再ソート
+    sorted_final = sorted(final_scores.items(), key=lambda x: x[1], reverse=True)
+
     result_lines = []
-    for i, (key, score) in enumerate(sorted_players, start=1):
+    for i, (key, score) in enumerate(sorted_final, start=1):
         name = name_map.get(key, key)
         result_lines.append(f"{i}位　{name}　{score}")
 
@@ -78,7 +86,3 @@ def handle_message(event):
         event.reply_token,
         TextSendMessage(text=reply_text)
     )
-
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
