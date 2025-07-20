@@ -1,16 +1,17 @@
 from flask import Flask, request, abort
 import os
-from linebot.v3.webhook import WebhookHandler
-from linebot.v3.messaging import MessagingApi, ReplyMessageRequest
-from linebot.v3.models import TextMessageContent, MessageEvent, TextMessage
+from linebot.v3.messaging import MessagingApi, Configuration
+from linebot.v3.webhook import WebhookHandler, MessageEvent
+from linebot.v3.messaging.models import TextMessage
+from linebot.v3.exceptions import InvalidSignatureError
+from linebot.v3.webhook.models import TextMessageContent
 
 app = Flask(__name__)
 
-channel_access_token = os.getenv("LINE_CHANNEL_ACCESS_TOKEN")
-channel_secret = os.getenv("LINE_CHANNEL_SECRET")
-
-handler = WebhookHandler(channel_secret)
-messaging_api = MessagingApi(channel_access_token)
+# LINE BOT SDK v3 の設定
+configuration = Configuration(access_token=os.getenv("LINE_CHANNEL_ACCESS_TOKEN"))
+messaging_api = MessagingApi(configuration)
+handler = WebhookHandler(os.getenv("LINE_CHANNEL_SECRET"))
 
 # 表示名対応表
 name_map = {
@@ -23,13 +24,21 @@ name_map = {
 
 @app.route("/callback", methods=["POST"])
 def callback():
-    signature = request.headers.get("X-Line-Signature", "")
+    signature = request.headers["X-Line-Signature"]
     body = request.get_data(as_text=True)
-    handler.handle(body, signature)
+
+    try:
+        handler.handle(body, signature)
+    except InvalidSignatureError:
+        abort(400)
+
     return "OK"
 
-@handler.add(MessageEvent, message=TextMessageContent)
-def handle_message(event: MessageEvent):
+@handler.add(MessageEvent)
+def handle_message(event):
+    if not isinstance(event.message, TextMessageContent):
+        return
+
     text = event.message.text.strip()
     lines = text.splitlines()
     players = {}
@@ -45,52 +54,57 @@ def handle_message(event: MessageEvent):
             continue
 
     if len(players) < 4:
-        reply = "麻雀は4人でしようや。3麻て、、ここからがマグマなんですか笑"
-        messaging_api.reply_message(ReplyMessageRequest(reply_token=event.reply_token, messages=[TextMessage(text=reply)]))
+        reply = "プレイヤーが4人未満です。正しく入力してください。"
+        messaging_api.reply_message(event.reply_token, [TextMessage(text=reply)])
         return
 
-    if sum(players.values()) != 100000:
-        reply = "点数の合計が100000じゃない。点棒も数えられない人がいるの？"
-        messaging_api.reply_message(ReplyMessageRequest(reply_token=event.reply_token, messages=[TextMessage(text=reply)]))
+    total = sum(players.values())
+    if total != 100000:
+        reply = "点数の合計が100000になっていません。入力を確認してください。"
+        messaging_api.reply_message(event.reply_token, [TextMessage(text=reply)])
         return
 
-    # ソートと順位点計算
+    # 順位付けとスコア調整
     sorted_players = sorted(players.items(), key=lambda x: x[1], reverse=True)
-    values = [v for _, v in sorted_players]
-    adjustment = [0, 0, 0, 0]
+    scores = [score for _, score in sorted_players]
 
-    if values[0] == values[1]:
-        adjustment[0] = 10000
-        adjustment[1] = 10000
-    elif values[1] == values[2]:
+    # 同点処理（上位から見ていく）
+    adjustments = [0] * 4
+    if scores[0] == scores[1]:
+        adjustments[0] = 10000
+        adjustments[1] = 10000
+    elif scores[1] == scores[2]:
         pass  # 何もしない
-    elif values[2] == values[3]:
-        adjustment[2] = -10000
-        adjustment[3] = -10000
+    elif scores[2] == scores[3]:
+        adjustments[2] = -10000
+        adjustments[3] = -10000
     else:
-        adjustment = [15000, 5000, -5000, -15000]
+        adjustments = [15000, 5000, -5000, -15000]
 
-    # 調整後の点数
+    # スコア調整後の値を記録
     final_scores = {}
-    for (key, score), adj in zip(sorted_players, adjustment):
-        final_scores[key] = score + adj
+    for (key, score), diff in zip(sorted_players, adjustments):
+        final_scores[key] = score + diff
 
-    # 円換算用
-    yen_scores = {}
-    for key, score in final_scores.items():
-        score -= 25000
-        yen = int(score * 0.05)
-        yen_scores[key] = yen
-
-    # 出力整形
-    result_lines = []
+    # 再度順位付け
     sorted_final = sorted(final_scores.items(), key=lambda x: x[1], reverse=True)
-    for i, (key, score) in enumerate(sorted_final, start=1):
-        result_lines.append(f"{i}位　{name_map.get(key, key)}　{score}")
 
-    result_lines.append("")  # 空行
+    # 出力構築：点数表示
+    result_lines = []
     for i, (key, score) in enumerate(sorted_final, start=1):
-        result_lines.append(f"{i}位　{name_map.get(key, key)}　{yen_scores[key]}円")
+        name = name_map.get(key, key)
+        result_lines.append(f"{i}位　{name}　{score}")
 
-    reply_text = "\n".join(result_lines)
-    messaging_api.reply_message(ReplyMessageRequest(reply_token=event.reply_token, messages=[TextMessage(text=reply_text)]))
+    result_lines.append("")  # 改行
+
+    # 円換算（25000引いて0.05倍）
+    yen_lines = []
+    for i, (key, score) in enumerate(sorted_final, start=1):
+        name = name_map.get(key, key)
+        yen = int((score - 25000) * 0.05)
+        sign = "" if yen >= 0 else "-"
+        yen_lines.append(f"{i}位　{name}　{sign}{abs(yen)}円")
+
+    # 返信送信
+    reply_text = "\n".join(result_lines + yen_lines)
+    messaging_api.reply_message(event.reply_token, [TextMessage(text=reply_text)])
