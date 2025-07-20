@@ -1,16 +1,17 @@
 from flask import Flask, request, abort
 import os
 from linebot.v3.webhooks import MessageEvent, TextMessageContent
-from linebot.v3.messaging import MessagingApi, Configuration
+from linebot.v3.messaging import MessagingApi, Configuration, ApiClient  # ApiClient を追加
 from linebot.v3.webhook import WebhookHandler
-from linebot.v3.messaging.models import TextMessage, ReplyMessageRequest  # ★追加
+from linebot.v3.messaging.models import TextMessage, ReplyMessageRequest
 from linebot.v3.exceptions import InvalidSignatureError
 
 app = Flask(__name__)
 
-# LINE BOT SDK v3 の設定
+# LINE BOT SDK v3 の設定（修正済み）
 configuration = Configuration(access_token=os.getenv("LINE_CHANNEL_ACCESS_TOKEN"))
-messaging_api = MessagingApi(configuration)
+api_client = ApiClient(configuration)  # ← 修正ポイント
+messaging_api = MessagingApi(api_client)  # ← 修正ポイント
 handler = WebhookHandler(os.getenv("LINE_CHANNEL_SECRET"))
 
 # 表示名対応表
@@ -116,7 +117,7 @@ def handle_message(event):
 
     reply_text = "\n".join(result_lines + yen_lines)
 
-    # ★ 修正された返信処理（ReplyMessageRequest 使用）
+    # 正しい形式で返信
     messaging_api.reply_message(
         ReplyMessageRequest(
             reply_token=event.reply_token,
@@ -124,7 +125,7 @@ def handle_message(event):
         )
     )
 
-# ★ Render対応：ポート設定
+# Render対応：ポート設定
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
