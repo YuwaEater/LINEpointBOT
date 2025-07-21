@@ -42,6 +42,36 @@ def handle_message(event):
         return
     #前後の空白を消去
     text = event.message.text.strip()
+
+    #特定のワードで返信できるようにする
+    #初期状態
+    reply = None
+    if "きょうこ" in text:
+        reply = "その話はまずいですよ！"
+    elif "浪人" in text:
+        reply = "何田君と何永君の話ですか～？"
+    elif "留年" in text:
+        reply = "何永君の話ですか～？"
+    elif "宮崎" in text:
+        reply = "宮崎って素晴らしいですよね～！"
+    elif "山形" in text:
+        reply = "山形って、、、ロシアでしたっけ？"
+    elif "広島" in text:
+        reply = "先の時代の敗北者じゃけぇ！"
+    elif "岩手" in text:
+        reply = "リアス海岸でしたっけ？それ以外に何かあるんですか～？"
+    elif "千葉" in text:
+        reply = "関東の序列は埼玉の下ですよね？"
+    #ここからはLINEで返信するためのコード
+    if reply:
+        messaging_api.reply_message(
+            ReplyMessageRequest(
+                reply_token=event.reply_token,
+                messages=[TextMessage(text=reply)]
+            )
+        )
+        return
+    
     #4行確認および-の数値も計算できるように
     valid_lines = [line for line in text.splitlines() if len(line) >=2 and line[1:].lstrip("-").isdigit()]
     if len(valid_lines) <4:
