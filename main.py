@@ -73,6 +73,8 @@ def handle_message(event):
                 for key, value in entry.items():
                     totals[key] = totals.get(key, 0) + value
 
+            match_count = len(recorderd_scores)
+
             # 円換算の表示
             yen_lines = ["【今日の結果はこうなりました！】"]
             sorted_totals = sorted(totals.items(), key=lambda x: x[1], reverse=True)
