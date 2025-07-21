@@ -78,7 +78,7 @@ def handle_message(event):
             sorted_totals = sorted(totals.items(), key=lambda x: x[1], reverse=True)
             for i, (key, total) in enumerate(sorted_totals, start=1):
                 name = name_map.get(key, key)
-                yen = int((total - 25000) * 0.05)
+                yen = int((total - 25000 * match_count) * 0.05)
                 sign = "" if yen >= 0 else "-"
                 yen_lines.append(f"{i}位　{name}　{sign}{abs(yen)}円")
 
