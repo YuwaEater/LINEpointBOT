@@ -43,7 +43,7 @@ def handle_message(event):
     #前後の空白を消去
     text = event.message.text.strip()
     #4行確認
-    valid_lines = [line for line in text.splitlines() if len(line) >=2 and line[1:].isdigit()]
+    valid_lines = [line for line in text.splitlines() if len(line) >=2 and line[1:].lstrip("-").isdigit()]
     if len(valid_lines) <4:
         return
         
