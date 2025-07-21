@@ -102,6 +102,48 @@ def handle_message(event):
     reply = None
     if "きょうこ" in text:
         reply = "その話はまずいですよ！"
+    elif "千佳ちゃんかわいいね" in text:
+        reply = "でへへ～もっと褒めて～"
+    elif "千佳ちゃん賢いね" in text:
+        reply = "IQ3でも任せなさ～い！"
+    elif "千佳ちゃん" in text:
+        reply = "何ですか～？"
+    elif "ゆのか" in text:
+        reply = "ゆのかちゃんはもういないんです！"
+    elif "ありさ" in text:
+        reply = "あと半年、早ければなぁ～。"
+    elif "ゆな" in text:
+        reply = "一年後には必ず！きっと、、！おそらく、、、。"
+    elif "ひなこ" in text:
+        reply = "過去を悔いたって仕方ないのです！"
+    elif "たいが誕生日おめでとう" in text:
+        reply = "たいがくん！誕生日おめでとなのです！"
+    elif "しょうえい誕生日おめでとう" in text:
+        reply = "しょうえいくん！誕生日おめでとなのです！"
+    elif "ゆういち誕生日おめでとう" in text:
+        reply = "ゆういちくん！誕生日おめでとなのです！"
+    elif "たくろう誕生日おめでとう" in text:
+        reply = "たくろうくん！誕生日おめでとなのです！"
+    elif "慰めて" in text:
+        reply = "まったく～、仕方のない子ですね～"
+    elif "褒めて" in text:
+        reply = "わぁ～！素晴らしいですね！"
+    elif "本気" in text:
+        reply = "どーんだYO！"
+    elif "喰らい尽くす！" in text:
+        reply = "ゴッドイーター！！！"
+    elif "運命の一撃を" in text:
+        reply = "叩き込め～！"
+    elif "BONUS確定！" in text:
+        reply = "EXTRA！！！"
+    elif "千佳ちゃん歌って" in text:
+        reply = "いつだって　誰だって　恋したらヒロイン～"
+    elif "千佳ちゃん踊って" in text:
+        reply = "しゃらら～ん"
+    elif "困った" in text:
+        reply = "ラブ探偵千佳に任せなさ～い！"
+    elif "喧嘩" in text:
+        reply = "仲良し警察です！喧嘩する悪い子はここですか！？"
     elif "浪人" in text:
         reply = "何田君と何永君の話ですか～？"
     elif "留年" in text:
