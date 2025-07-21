@@ -37,9 +37,10 @@ def callback():
 
 @handler.add(MessageEvent)
 def handle_message(event):
+    #スタンプや画像を無視するようにする
     if not isinstance(event.message, TextMessageContent):
         return
-
+    #前後の空白を消去
     text = event.message.text.strip()
     #4行確認
     valid_lines = [line for line in text.splitlines() if len(line) >=2 and line[1:].isdigit()]
