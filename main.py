@@ -62,37 +62,40 @@ def handle_message(event):
             )
         )
         return
-
     if text == "麻雀終了":
-        recording = False
-        if not recorded_scores:
-            reply = "まだ一試合もしてないですよ！"
-        else:
-            totals = {}
-            for entry in recorded_scores:
-                for key, value in entry.items():
-                    totals[key] = totals.get(key, 0) + value
+    recording = False
+    if not recorded_scores:
+        reply = "まだ一試合もしてないですよ！"
+    else:
+        totals = {}
+        play_counts = {}
 
-            match_count = len(recorded_scores)
+        # スコア合計と参加回数を集計
+        for entry in recorded_scores:
+            for key, value in entry.items():
+                totals[key] = totals.get(key, 0) + value
+                play_counts[key] = play_counts.get(key, 0) + 1
 
-            # 円換算の表示
-            yen_lines = ["【今日の結果はこうなりました！】"]
-            sorted_totals = sorted(totals.items(), key=lambda x: x[1], reverse=True)
-            for i, (key, total) in enumerate(sorted_totals, start=1):
-                name = name_map.get(key, key)
-                yen = int((total - 25000 * match_count) * 0.05)
-                sign = "" if yen >= 0 else "-"
-                yen_lines.append(f"{i}位　{name}　{sign}{abs(yen)}円")
+        # 円換算の表示
+        yen_lines = ["【今日の結果はこうなりました！】"]
+        sorted_totals = sorted(totals.items(), key=lambda x: x[1], reverse=True)
+        for i, (key, total) in enumerate(sorted_totals, start=1):
+            name = name_map.get(key, key)
+            match_count = play_counts.get(key, 0)
+            base_score = 25000 * match_count
+            yen = int((total - base_score) * 0.05)
+            sign = "" if yen >= 0 else "-"
+            yen_lines.append(f"{i}位　{name}　{sign}{abs(yen)}円")
 
-            reply = "\n".join(yen_lines)
+        reply = "\n".join(yen_lines)
 
-        messaging_api.reply_message(
-            ReplyMessageRequest(
-                reply_token=event.reply_token,
-                messages=[TextMessage(text=reply)]
-            )
+    messaging_api.reply_message(
+        ReplyMessageRequest(
+            reply_token=event.reply_token,
+            messages=[TextMessage(text=reply)]
         )
-        return
+    )
+    return
 
     #特定のワードで返信できるようにする
     #初期状態
