@@ -23,6 +23,11 @@ name_map = {
     "い": "しょさん"
 }
 
+# 記録フラグと一時保存データ
+#合計をまとめるための箱を用意
+recording = False
+recorded_scores = []
+
 @app.route("/callback", methods=["POST"])
 def callback():
     signature = request.headers["X-Line-Signature"]
@@ -42,6 +47,51 @@ def handle_message(event):
         return
     #前後の空白を消去
     text = event.message.text.strip()
+
+    #開始と終了の合図を設計
+    # 記録モードの開始・終了（ステップ2）
+    global recording, recorded_scores
+    if text == "麻雀開始":
+        recording = True
+        recorded_scores = []
+        reply = "試合スタートです！たくさんお金を失うのはどの子かな～？"
+        messaging_api.reply_message(
+            ReplyMessageRequest(
+                reply_token=event.reply_token,
+                messages=[TextMessage(text=reply)]
+            )
+        )
+        return
+
+        if text == "麻雀終了":
+        recording = False
+        if not recorded_scores:
+            reply = "まだ一試合もしてないですよ！"
+        else:
+            totals = {}
+            for entry in recorded_scores:
+                for key, value in entry.items():
+                    totals[key] = totals.get(key, 0) + value
+
+            # 円換算の表示
+            yen_lines = ["【今日の結果はこうなりました！】"]
+            sorted_totals = sorted(totals.items(), key=lambda x: x[1], reverse=True)
+            for i, (key, total) in enumerate(sorted_totals, start=1):
+                name = name_map.get(key, key)
+                yen = int((total - 25000) * 0.05)
+                sign = "" if yen >= 0 else "-"
+                yen_lines.append(f"{i}位　{name}　{sign}{abs(yen)}円")
+
+            reply = "\n".join(yen_lines)
+
+        messaging_api.reply_message(
+            ReplyMessageRequest(
+                reply_token=event.reply_token,
+                messages=[TextMessage(text=reply)]
+            )
+        )
+        return
+
 
     #特定のワードで返信できるようにする
     #初期状態
@@ -153,6 +203,11 @@ def handle_message(event):
 
     # 再度順位付け
     sorted_final = sorted(final_scores.items(), key=lambda x: x[1], reverse=True)
+
+    #開始以降の点数を保存
+    if recording:
+    recorded_scores.append(final_scores.copy())
+
 
     # 点数表示（最終点数)
     #LINEで送るメッセージの1行ずつをリストとして準備
