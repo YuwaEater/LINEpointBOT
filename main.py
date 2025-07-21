@@ -63,7 +63,7 @@ def handle_message(event):
         )
         return
 
-        if text == "麻雀終了":
+    if text == "麻雀終了":
         recording = False
         if not recorded_scores:
             reply = "まだ一試合もしてないですよ！"
@@ -91,7 +91,6 @@ def handle_message(event):
             )
         )
         return
-
 
     #特定のワードで返信できるようにする
     #初期状態
@@ -206,7 +205,7 @@ def handle_message(event):
 
     #開始以降の点数を保存
     if recording:
-    recorded_scores.append(final_scores.copy())
+        recorded_scores.append(final_scores.copy())
 
 
     # 点数表示（最終点数)
